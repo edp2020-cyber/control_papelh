@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Control de papel higiénico</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Figtree:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#EEF5F4; --surface:#FFFFFF; --ink:#0E3B3A; --muted:#5B7B79; --line:#CFE0DE;
+  --teal:#117A73; --proj:#E9A800; --up:#B4432F; --down:#117A73; --tile:#DCEAE8;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--bg:#0B1F1E;--surface:#112B2A;--ink:#E3F2F0;--muted:#8FB1AE;--line:#1F4442;--teal:#3FC1B6;--proj:#F2B92B;--up:#FF8D74;--down:#4FD0C4;--tile:#173836}
+}
+:root[data-theme="dark"]{--bg:#0B1F1E;--surface:#112B2A;--ink:#E3F2F0;--muted:#8FB1AE;--line:#1F4442;--teal:#3FC1B6;--proj:#F2B92B;--up:#FF8D74;--down:#4FD0C4;--tile:#173836}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Figtree,system-ui,sans-serif;
+  background-image:linear-gradient(var(--tile) 1px,transparent 1px),linear-gradient(90deg,var(--tile) 1px,transparent 1px);background-size:36px 36px;background-attachment:fixed}
+main{max-width:720px;margin:0 auto;padding:20px 16px 48px}
+h1,h2,.big{font-family:"Bricolage Grotesque",Figtree,system-ui,sans-serif;letter-spacing:-.02em}
+h1{font-size:2rem;line-height:1.1;margin:8px 0 4px;font-weight:800}
+.sub{color:var(--muted);margin:0 0 20px}
+section{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:16px}
+h2{font-size:1.15rem;margin:0 0 12px;font-weight:700}
+.entry{display:flex;flex-direction:column;gap:14px}
+.qty{display:flex;align-items:center;justify-content:center;gap:14px}
+.qty button{width:56px;height:56px;border-radius:50%;border:2px solid var(--teal);background:transparent;color:var(--teal);font-size:1.8rem;line-height:1;cursor:pointer}
+.qty input{width:110px;text-align:center;font:800 3.4rem/1 "Bricolage Grotesque",Figtree,sans-serif;color:var(--ink);background:transparent;border:0;border-bottom:3px solid var(--teal);padding:2px 0;-moz-appearance:textfield}
+.qty input::-webkit-inner-spin-button{-webkit-appearance:none}
+.unit{text-align:center;color:var(--muted);margin-top:-6px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+label{color:var(--muted);font-size:.9rem}
+input[type=date]{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.save{flex:1;min-width:160px;background:var(--teal);color:#fff;border:0;border-radius:12px;padding:14px 18px;font:700 1rem Figtree,sans-serif;cursor:pointer}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .save{color:#062321}}
+button:focus-visible,input:focus-visible{outline:3px solid var(--proj);outline-offset:2px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stat{background:var(--bg);border-radius:12px;padding:12px 14px}
+.stat .big{font-size:1.9rem;font-weight:800;line-height:1.1}
+.stat span{color:var(--muted);font-size:.85rem}
+.up{color:var(--up)}.down{color:var(--down)}
+.chart{overflow-x:auto}
+svg{width:100%;min-width:480px;height:auto;display:block}
+.legend{display:flex;gap:16px;font-size:.85rem;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{text-align:right;padding:9px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--muted);font-weight:500;font-size:.85rem}
+tr.proj td{color:var(--muted);font-style:italic}
+.del{background:none;border:0;color:var(--muted);cursor:pointer;font-size:1.1rem;padding:4px 8px}
+.empty{color:var(--muted);text-align:center;padding:12px 0}
+.note{color:var(--muted);font-size:.85rem;margin:10px 0 0}
+.cfg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.cfg label{display:flex;flex-direction:column;gap:4px}
+.cfg input{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+.alert{background:var(--proj);color:#2B1F00;border-radius:12px;padding:12px 14px;font-weight:600;margin-bottom:12px}
+.ghost{background:transparent;color:var(--teal);border:2px solid var(--teal);border-radius:10px;padding:8px 12px;font:600 .9rem Figtree,sans-serif;cursor:pointer}
+@media (max-width:420px){.cfg{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Papel higiénico: control diario</h1>
+  <p class="sub">Anota cuántos rollos repones cada día. La app calcula el promedio, la variación y lo que vas a necesitar.</p>
+
+  <section class="entry" aria-label="Registrar reposición">
+    <h2>Rollos repuestos</h2>
+    <div class="qty">
+      <button type="button" id="minus" aria-label="Restar un rollo">−</button>
+      <input id="qty" type="number" inputmode="numeric" min="0" step="1" value="1" aria-label="Cantidad de rollos">
+      <button type="button" id="plus" aria-label="Sumar un rollo">+</button>
+    </div>
+    <div class="unit">rollos</div>
+    <div class="row">
+      <label for="date">Fecha</label>
+      <input id="date" type="date">
+      <button class="save" id="save" type="button">Guardar registro</button>
+    </div>
+  </section>
+
+  <section aria-label="Precio y stock">
+    <h2>Precio y stock</h2>
+    <div class="cfg">
+      <label>Precio por rollo ($)<input id="cfg-price" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+      <label>Rollos en stock<input id="cfg-stock" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+      <label>Stock mínimo<input id="cfg-min" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+    </div>
+    <p class="note">Opcional. Sirve para calcular costos y avisarte cuando el papel esté por acabarse.</p>
+  </section>
+
+  <section id="statsBox" aria-label="Resumen" hidden>
+    <h2>Resumen</h2>
+    <div class="alert" id="alert" role="alert" hidden></div>
+    <div class="stats" id="stats"></div>
+    <p class="note" id="note"></p>
+  </section>
+
+  <section aria-label="Gráfico" id="chartBox" hidden>
+    <h2>Consumo y proyección</h2>
+    <div class="chart" id="chart"></div>
+    <div class="legend"><span><i style="background:var(--teal)"></i>Registrado</span><span><i style="background:var(--proj)"></i>Proyectado</span></div>
+  </section>
+
+  <section aria-label="Historial">
+    <div class="row" style="justify-content:space-between;margin-bottom:12px"><h2 style="margin:0">Día a día</h2><button class="ghost" id="export" type="button" hidden>Exportar a Excel (CSV)</button></div>
+    <div class="tablewrap" id="table"><p class="empty">Aún no hay registros. Ingresa los rollos de hoy y toca “Guardar registro”.</p></div>
+  </section>
+<section aria-label="Opinión" id="fbBox" hidden>
+    <h2>¿Qué tal la app?</h2>
+    <p class="note" style="margin:0 0 10px">Cuéntanos si la proyección se acerca a tu consumo real o qué le falta.</p>
+    <textarea id="fbText" rows="3" hidden placeholder="Escribe aquí tu opinión..." style="width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px"></textarea>
+    <button class="ghost" id="fb" type="button">Dejar un comentario</button>
+  </section>
+</main>
+
+<script>
+(function(){
+  var KEY='papel-higienico-v1';
+  var data=[];
+  try{var raw=localStorage.getItem(KEY);if(raw){data=JSON.parse(raw)||[];}}catch(e){data=[];}
+  if(!Array.isArray(data))data=[];
+
+  var $=function(id){return document.getElementById(id)};
+  var qty=$('qty'),dateEl=$('date');
+
+  function iso(d){var m=d.getMonth()+1,day=d.getDate();return d.getFullYear()+'-'+(m<10?'0':'')+m+'-'+(day<10?'0':'')+day}
+  function parse(s){var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2])}
+  function fmt(d){return d.toLocaleDateString('es-CL',{weekday:'short',day:'numeric',month:'short'})}
+  function n1(x){return (Math.round(x*10)/10).toLocaleString('es-CL',{minimumFractionDigits:0,maximumFractionDigits:1})}
+  function persist(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
+
+  dateEl.value=iso(new Date());
+
+  var CK='papel-higienico-cfg-v1',cfg={price:0,stock:0,min:0},dl=null,standalone=!window.claude;
+  try{var rc=localStorage.getItem(CK);if(rc){var oc=JSON.parse(rc);if(oc&&typeof oc==='object')cfg={price:+oc.price||0,stock:+oc.stock||0,min:+oc.min||0}}}catch(e){}
+  ['price','stock','min'].forEach(function(k){
+    var el=$('cfg-'+k);if(cfg[k])el.value=cfg[k];
+    el.addEventListener('input',function(){cfg[k]=Math.max(0,+el.value||0);try{localStorage.setItem(CK,JSON.stringify(cfg))}catch(e){}render()});
+  });
+  try{if(window.claude&&window.claude.use){window.claude.use('downloads').then(function(d){dl=d;render()}).catch(function(){})}}catch(e){}
+  try{if(window.claude&&window.claude.use){window.claude.use('comments').then(function(c){if(!c)return;$('fbBox').hidden=false;$('fb').onclick=function(){c.openComposer({element:$('fbBox')}).catch(function(){})}}).catch(function(){})}}catch(e){}
+  function money(x){return '$'+Math.round(x).toLocaleString('es-CL')}
+
+  var FEEDBACK_EMAIL='edp2020@gmail.com'; // correo que recibe las opiniones
+  if(standalone){
+    $('fbBox').hidden=false;$('fbText').hidden=false;$('fb').textContent='Enviar opinión';
+    $('fb').onclick=function(){
+      var t=$('fbText').value.trim();if(!t){$('fbText').focus();return}
+      var msg=t+'\n\n(Registros en la app: '+data.length+')',btn=$('fb');
+      btn.disabled=true;btn.textContent='Enviando...';
+      fetch('https://formsubmit.co/ajax/'+FEEDBACK_EMAIL,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({_subject:'Opinión sobre la app de papel higiénico',message:msg,_template:'box'})}).then(function(r){if(!r.ok)throw 0;$('fbText').value='';btn.textContent='¡Gracias! Opinión enviada'}).catch(function(){btn.textContent='No se pudo enviar. Reintentar'}).then(function(){btn.disabled=false;setTimeout(function(){btn.textContent='Enviar opinión'},4000)});
+      
+    };
+  }
+
+  $('export').onclick=function(){
+    if(!data.length||!(dl||standalone))return;
+    var f=function(x){return String(Math.round(x*10)/10).replace('.',',')};
+    var rows=[['Fecha','Tipo','Rollos','Variación (rollos)','Variación (%)','Costo']];
+    var pr=project(data.map(function(e){return e.q}),7),all=[];
+    data.forEach(function(e){all.push({d:e.d,q:e.q,t:'Registrado'})});
+    var base=parse(data[data.length-1].d);
+    pr.out.forEach(function(v,k){var dd=new Date(base);dd.setDate(dd.getDate()+k+1);all.push({d:iso(dd),q:v,t:'Proyectado'})});
+    all.forEach(function(e,i){
+      var dv='',dp='';
+      if(i>0){var o=delta(e.q,all[i-1].q);dv=f(o.diff);dp=o.pct===null?'':f(o.pct)}
+      rows.push([e.d,e.t,f(e.q),dv,dp,cfg.price>0?String(Math.round(e.q*cfg.price)):'']);
+    });
+    var csv='\uFEFF'+rows.map(function(r){return r.join(';')}).join('\r\n');
+    if(dl){dl.save({filename:'papel-higienico.csv',data:csv}).catch(function(){})}
+    else{var bl=new Blob([csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download='papel-higienico.csv';document.body.appendChild(a);a.click();a.remove()}
+  };
+
+  $('minus').onclick=function(){qty.value=Math.max(0,(+qty.value||0)-1)};
+  $('plus').onclick=function(){qty.value=(+qty.value||0)+1};
+  $('save').onclick=function(){
+    var q=Math.max(0,Math.round(+qty.value||0));
+    var d=dateEl.value; if(!d)return;
+    var found=data.filter(function(e){return e.d===d})[0];
+    if(found)found.q=q; else data.push({d:d,q:q});
+    data.sort(function(a,b){return a.d<b.d?-1:1});
+    persist();render();
+  };
+
+  function project(vals,days){
+    var n=vals.length,w=vals.slice(-7),m=w.length;
+    var mean=w.reduce(function(a,b){return a+b},0)/m;
+    var slope=0;
+    if(m>=4){
+      var xb=(m-1)/2,num=0,den=0;
+      w.forEach(function(y,i){num+=(i-xb)*(y-mean);den+=(i-xb)*(i-xb)});
+      slope=den?num/den:0;
+    }
+    var out=[];
+    for(var k=0;k<days;k++){out.push(Math.max(0,mean+0.5*slope*((m+k)-(m-1)/2)))}
+    return {mean:mean,out:out,slope:slope};
+  }
+
+  function delta(cur,prev){
+    var diff=cur-prev,pct=prev===0?(cur===0?0:null):diff/prev*100;
+    return {diff:diff,pct:pct};
+  }
+  function deltaTxt(o){
+    if(o.diff===0)return '<span>sin cambio</span>';
+    var cls=o.diff>0?'up':'down',sign=o.diff>0?'+':'−';
+    var p=o.pct===null?'':' ('+sign+Math.abs(Math.round(o.pct))+'%)';
+    return '<span class="'+cls+'">'+sign+n1(Math.abs(o.diff))+p+'</span>';
+  }
+
+  function render(){
+    var has=data.length>0;
+    $('statsBox').hidden=!has;$('chartBox').hidden=!has;$('export').hidden=!(has&&(dl||standalone));
+    if(!has){$('table').innerHTML='<p class="empty">Aún no hay registros. Ingresa los rollos de hoy y toca “Guardar registro”.</p>';return}
+    var vals=data.map(function(e){return e.q});
+    var pr=project(vals,7);
+    var last=data[data.length-1];
+    var sum7=pr.out.reduce(function(a,b){return a+b},0);
+    var sum30=pr.mean*30+0; // base: promedio reciente
+    var html='';
+    html+='<div class="stat"><div class="big">'+n1(pr.mean)+'</div><span>promedio diario (últimos '+Math.min(7,vals.length)+' registros)</span></div>';
+    if(data.length>1){
+      var dl=delta(last.q,data[data.length-2].q);
+      html+='<div class="stat"><div class="big">'+deltaTxt(dl)+'</div><span>último registro vs. el anterior</span></div>';
+    } else {
+      html+='<div class="stat"><div class="big">—</div><span>variación (necesitas 2 registros)</span></div>';
+    }
+    html+='<div class="stat"><div class="big">'+n1(pr.out[0])+'</div><span>proyección para el día siguiente</span></div>';
+    html+='<div class="stat"><div class="big">'+n1(sum7)+'</div><span>rollos proyectados en 7 días</span></div>';
+    html+='<div class="stat"><div class="big">'+Math.ceil(sum30)+'</div><span>rollos estimados en 30 días</span></div>';
+    var avgAbs=0;
+    if(data.length>1){var s=0;for(var i=1;i<vals.length;i++)s+=Math.abs(vals[i]-vals[i-1]);avgAbs=s/(vals.length-1)}
+    html+='<div class="stat"><div class="big">'+(data.length>1?'±'+n1(avgAbs):'—')+'</div><span>variación diaria típica</span></div>';
+    if(cfg.price>0){
+      html+='<div class="stat"><div class="big">'+money(pr.mean*cfg.price)+'</div><span>costo diario promedio</span></div>';
+      html+='<div class="stat"><div class="big">'+money(sum30*cfg.price)+'</div><span>costo estimado en 30 días</span></div>';
+    }
+    if(vals.length>1){
+      var ae=0,ap=0,an=0;
+      for(var q=1;q<vals.length;q++){var e2=project(vals.slice(0,q),1).out[0],real=vals[q];ae+=Math.abs(real-e2);if(real>0){ap+=Math.abs(real-e2)/real;an++}}
+      html+='<div class="stat"><div class="big">'+n1(ae/(vals.length-1))+'</div><span>error promedio de la proyección (rollos/día)</span></div>';
+      if(an)html+='<div class="stat"><div class="big">'+Math.max(0,Math.round(100-ap/an*100))+'%</div><span>precisión de la proyección</span></div>';
+    }
+    var daysLeft=pr.mean>0?cfg.stock/pr.mean:null;
+    if(cfg.stock>0){html+='<div class="stat"><div class="big">'+(daysLeft===null?'—':n1(daysLeft))+'</div><span>días de stock restantes</span></div>'}
+    var msg='';
+    if(cfg.stock>0||cfg.min>0){
+      if(cfg.stock<=cfg.min){msg='Stock bajo: tienes '+n1(cfg.stock)+' rollos y tu mínimo es '+n1(cfg.min)+'. Conviene reponer ahora.'}
+      else if(daysLeft!==null&&daysLeft<=7){msg='Tu stock alcanza para unos '+n1(daysLeft)+' días al ritmo actual. Planifica la compra.'}
+    }
+    $('alert').hidden=!msg;$('alert').textContent=msg;
+    $('stats').innerHTML=html;
+    $('note').textContent=data.length<4?'Con menos de 4 registros la proyección usa solo el promedio. Mientras más días anotes, más precisa será.':'La proyección usa el promedio de los últimos 7 registros y suaviza la tendencia reciente.';
+
+    // gráfico
+    var hist=data.slice(-14),bars=hist.map(function(e){return {d:e.d,q:e.q,p:false}});
+    var base=parse(last.d);
+    pr.out.forEach(function(v,k){var dd=new Date(base);dd.setDate(dd.getDate()+k+1);bars.push({d:iso(dd),q:v,p:true})});
+    var W=640,H=230,pl=28,pb=34,pt=16,max=Math.max.apply(null,bars.map(function(b){return b.q}).concat([1]));
+    var bw=(W-pl)/bars.length,svg='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Gráfico de rollos por día">';
+    svg+='<line x1="'+pl+'" y1="'+(H-pb)+'" x2="'+W+'" y2="'+(H-pb)+'" stroke="var(--line)"/>';
+    svg+='<text x="0" y="'+(pt+8)+'" font-size="11" fill="var(--muted)">'+n1(max)+'</text>';
+    bars.forEach(function(b,i){
+      var h=(H-pb-pt)*b.q/max,x=pl+i*bw+bw*0.15,w=bw*0.7,y=H-pb-h;
+      svg+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+Math.max(h,1)+'" rx="3" fill="'+(b.p?'var(--proj)':'var(--teal)')+'"'+(b.p?' opacity=".85"':'')+'/>';
+      svg+='<text x="'+(x+w/2)+'" y="'+(y-4)+'" font-size="10" text-anchor="middle" fill="var(--ink)">'+n1(b.q)+'</text>';
+      var dd=parse(b.d);
+      if(bars.length<=14||i%2===0)svg+='<text x="'+(x+w/2)+'" y="'+(H-pb+14)+'" font-size="10" text-anchor="middle" fill="var(--muted)">'+dd.getDate()+'/'+(dd.getMonth()+1)+'</text>';
+    });
+    svg+='</svg>';
+    $('chart').innerHTML=svg;
+
+    // tabla
+    var t='<table><thead><tr><th>Fecha</th><th>Rollos</th><th>Estimado</th><th>Variación</th><th></th></tr></thead><tbody>';
+    pr.out.forEach(function(v,k){
+      var dd=new Date(base);dd.setDate(dd.getDate()+k+1);
+      var prev=k===0?last.q:pr.out[k-1];
+      t+='<tr class="proj"><td>'+fmt(dd)+' (proy.)</td><td>'+n1(v)+'</td><td></td><td>'+deltaTxt(delta(v,prev))+'</td><td></td></tr>';
+    });
+    for(var j=data.length-1;j>=0;j--){
+      var e=data[j];
+      var v=j>0?deltaTxt(delta(e.q,data[j-1].q)):'<span>—</span>';
+      var est=j>0?project(vals.slice(0,j),1).out[0]:null;
+      var es=est===null?'—':n1(est)+' <small class="'+(Math.abs(est-e.q)<=0.5?'down':'up')+'">('+(e.q-est>=0?'+':'−')+n1(Math.abs(e.q-est))+')</small>';
+      t+='<tr><td>'+fmt(parse(e.d))+'</td><td>'+e.q+'</td><td>'+es+'</td><td>'+v+'</td><td><button class="del" data-d="'+e.d+'" aria-label="Eliminar registro">×</button></td></tr>';
+    }
+    t+='</tbody></table>';
+    $('table').innerHTML=t;
+    Array.prototype.forEach.call(document.querySelectorAll('.del'),function(b){
+      b.onclick=function(){data=data.filter(function(e){return e.d!==b.getAttribute('data-d')});persist();render()};
+    });
+  }
+  render();
+})();
+</script>
+</body>
+</html>
